@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -44,7 +45,7 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 	return token, err
 }
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthenticationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 
@@ -56,8 +57,41 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		claims, ok := token.Claims.(*Claims)
+
 		if !ok {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get claims from token"})
+			c.Abort()
+			return
+		}
+		c.Set("email", claims.Email)
+		c.Set("role", claims.Role)
+		c.Set("id", claims.ID)
+		c.Next()
+	}
+}
+func AuthorizationMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+
+		token, err := ValidateToken(tokenString)
+		if err != nil || !token.Valid {
+			fmt.Println("Invalid Token:", err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(*Claims)
+		if !ok {
+			fmt.Println("Failed to get claims from token")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get claims from token"})
+			c.Abort()
+			return
+		}
+
+		if claims.Role != "admin" {
+			fmt.Println("Unauthorized role:", claims.Role) // Add this line for debugging
+			c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		}

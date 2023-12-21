@@ -1,7 +1,7 @@
 package config
 
 import (
-	"challenge-2/models"
+	"e-commerce/models"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -14,7 +14,7 @@ func ConnectDatabase() *gorm.DB {
 	if err != nil {
 		log.Fatal("Error connecting to database", err)
 	}
-
-	db.AutoMigrate(&models.User{}, &models.Appointment{})
+	db = db.Debug()
+	db.AutoMigrate(&models.User{}, &models.Category{}, &models.Product{}, &models.TransactionHistory{})
 	return db
 }
