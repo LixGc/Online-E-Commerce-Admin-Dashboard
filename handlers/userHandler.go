@@ -10,6 +10,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// Updates User's balance
+// @Summary Updates the user's balance
+// @Produce json
+// @Consumes json
+// @Param email body int true "Balance"
+// @Header 200 {string} Token "API token for authentication"
+// @Success 201 {object} models.User "User registered successfully"
+// @Router /users/register [post]
 func UpdateUserBalance(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Retrieve user email from the context

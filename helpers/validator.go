@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// IsValidEmail checks if the given email is in a valid format
 func IsValidEmail(email string) error {
 	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
 		return errors.New("Invalid email format")
@@ -13,7 +12,6 @@ func IsValidEmail(email string) error {
 	return nil
 }
 
-// ValidateBalance checks if the balance is within the valid range
 func ValidateBalance(balance int) error {
 	if balance < 0 || balance > 100000000 {
 		return errors.New("Balance must be between 0 and 100,000,000")

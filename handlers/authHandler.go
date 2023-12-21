@@ -10,14 +10,26 @@ import (
 	"gorm.io/gorm"
 )
 
-// Register Register a new user
+// ErrorResponse represents an error response in the API.
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+// SuccessResponse represents a success response in the API.
+type SuccessResponse struct {
+	Message string `json:"message"`
+}
+
 // @Summary Register a new user
 // @Produce json
 // @Consumes json
 // @Param email body string true "Email"
+// @Param full_name body string true "Full Name"
 // @Param password body string true "Password"
-// @Param role body string true "Role"
 // @Success 201 {object} models.User "User registered successfully"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 409 {object} ErrorResponse "Email already exists"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
 // @Router /users/register [post]
 func Register(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -85,14 +97,17 @@ func Register(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// Login Logs user into the system
 // @Summary Logs user into the system
 // @Produce json
 // @Consumes json
 // @Param email body string true "Email"
 // @Param password body string true "Password"
 // @Success 200 {string} Token "API token for authentication"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
 // @Router /users/login [post]
+
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var user models.User

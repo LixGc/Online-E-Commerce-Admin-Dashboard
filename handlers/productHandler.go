@@ -10,6 +10,24 @@ import (
 	"gorm.io/gorm"
 )
 
+// @Summary Create a new product
+// @Description Create a new product with the provided details
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param title body string true "Product title"
+// @Param price body integer true "Product price"
+// @Param stock body integer true "Product stock"
+// @Param category_id body integer true "Category ID"
+// @Success 201 {object} models.Product "Product created successfully"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 403 {object} ErrorResponse "Forbidden"
+// @Failure 404 {object} ErrorResponse "Not Found"
+// @Failure 409 {object} ErrorResponse "Conflict"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /products [post]
 func CreateProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var userInput struct {
@@ -62,6 +80,17 @@ func CreateProduct(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusCreated, newProduct)
 	}
 }
+
+// @Summary Get all products
+// @Description Get a list of all products
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {array} models.Product "List of products"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /products [get]
 func GetProducts(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var products []models.Product
@@ -73,9 +102,28 @@ func GetProducts(db *gorm.DB) gin.HandlerFunc {
 		}
 	}
 }
+
+// @Summary Update a product
+// @Description Update an existing product with the provided details
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param productId path integer true "Product ID"
+// @Param title body string true "Product title"
+// @Param price body integer true "Product price"
+// @Param stock body integer true "Product stock"
+// @Param category_id body integer true "Category ID"
+// @Success 200 {object} models.Product "Updated product"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 403 {object} ErrorResponse "Forbidden"
+// @Failure 404 {object} ErrorResponse "Not Found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /products/{productId} [put]
 func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.Param("id")
+		id := c.Param("productId")
 
 		var existingProduct models.Product
 		if err := db.Where("id = ?", id).First(&existingProduct).Error; err != nil {
@@ -141,9 +189,21 @@ func UpdateProduct(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"product": response})
 	}
 }
+
+// @Summary Delete a product
+// @Description Delete an existing product by ID
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param productId path integer true "Product ID"
+// @Success 200 {string} string "Product has been successfully deleted"
+// @Failure 404 {object} ErrorResponse "Product not found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /products/{productId} [delete]
 func DeleteProduct(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.Param("id")
+		id := c.Param("productId")
 		var existingProduct models.Product
 
 		if err := db.First(&existingProduct, id).Error; err != nil {

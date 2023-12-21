@@ -11,6 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// @Summary Get user's transactions
+// @Description Retrieve transactions for the authenticated user
+// @Tags Transactions
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {array} models.TransactionHistory "List of user's transactions"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 404 {object} ErrorResponse "Transactions not found for the user"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /transactions/my-transactions [get]
 func GetMyTransaction(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("id")
@@ -32,6 +43,17 @@ func GetMyTransaction(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, transactions)
 	}
 }
+
+// @Summary Get all transactions
+// @Description Retrieve all transactions (admin access)
+// @Tags Transactions
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Security ApiKeyAuth
+// @Success 200 {array} models.TransactionHistory "List of all transactions"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Router /transactions/user-transactions [get]
 func GetTransaction(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var TransactionHistory []models.TransactionHistory
@@ -43,6 +65,21 @@ func GetTransaction(db *gorm.DB) gin.HandlerFunc {
 		}
 	}
 }
+
+// @Summary Create a new transaction
+// @Description Purchase a product and create a transaction record
+// @Tags Transactions
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param product_id body int true "Product ID to purchase"
+// @Param quantity body int true "Quantity of the product to purchase"
+// @Success 200 {string} string "Purchase successfull"
+// @Failure 400 {object} ErrorResponse "Bad request"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Failure 404 {object} ErrorResponse "Product not found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /transactions [post]
 func CreateTransaction(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var userInput struct {
@@ -109,6 +146,17 @@ func CreateTransaction(db *gorm.DB) gin.HandlerFunc {
 			TotalPrice: totalPrice,
 		}
 		if err := db.Create(&updatedTransaction).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		var existingCategory models.Category
+		if err := db.Model(&existingProduct).Association("Category").Find(&existingCategory); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		existingCategory.SoldProductAmount += userInput.Quantity
+
+		if err := db.Save(&existingCategory).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
